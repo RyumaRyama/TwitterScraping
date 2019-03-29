@@ -7,6 +7,12 @@ end
 
 $account_name = ARGV[0]
 
+def git_file_html
+  require 'open-uri'
+  url = "https://twitter.com/#{$account_name}"
+  open(url).read
+end
+
 def get_min_position
   f = File.open("./#{$account_name}.html")
   text = f.read
@@ -27,6 +33,6 @@ def get_next_json(min_position)
   p next_min
 end
 
-min_position = get_min_position
-get_next_json(min_position)
-
+# min_position = get_min_position
+# get_next_json(min_position)
+p git_file_html
