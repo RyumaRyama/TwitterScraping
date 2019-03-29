@@ -1,11 +1,9 @@
 require 'open-uri'
 
-if ARGV.size() != 1
-  puts "Usage: Argv ACCOUNT_NAME"
-  exit
+def main
+  min_position = get_min_position
+  get_next_json(min_position)
 end
-
-$account_name = ARGV[0]
 
 def get_min_position
   f = File.open("./#{$account_name}.html")
@@ -27,6 +25,17 @@ def get_next_json(min_position)
   p next_min
 end
 
-min_position = get_min_position
-get_next_json(min_position)
 
+
+# 初期設定やらmainの呼び出し
+if __FILE__ == $0
+  # アカウント名が指定されてなかったら終了
+  if ARGV.size() != 1 or ARGV[0] !~ /\A@.+\Z/
+    puts "Usage: Argv @[ACCOUNT_NAME]"
+    exit
+  end
+
+  $account_name = ARGV[0].delete("@")
+
+  main
+end
