@@ -18,17 +18,20 @@ def get_min_position(top_html)
   $1 if top_html =~ /data-min-position="(.+?)"/
 end
 
+# min_positionからjsonを取得，次のmin_positionとhtmlに分割
 def get_next_json(min_position)
   url = "https://twitter.com/i/profiles/show/#{$account_name}/timeline/tweets?include_available_features=1&include_entities=1&max_position=#{min_position}&reset_error_state=false"
   json_data = open(url).read
 
+  # 正規表現によりそれぞれを抜き出す
   next_min = $1 if json_data =~ /"min_position":"(.+?)"/
   page_html = $1 if json_data =~ /"items_html":"(.+?)","new_latent_count"/
 
+  # 仮でputsしている
   page_html.split('\n').each do |line|
     puts line.gsub(/\\u([\da-fA-F]{4})/) { [$1].pack('H*').unpack('n*').pack('U*') }
   end
-  p next_min
+  puts next_min
 end
 
 
