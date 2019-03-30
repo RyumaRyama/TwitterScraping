@@ -23,6 +23,10 @@ def get_next_json(min_position)
   # htmlの内容が崩れているので修正
   # \" -> "，\/ -> /，改行文字を改行するように再連結
   next_html = next_html.gsub(/\\u([\da-fA-F]{4})/) { [$1].pack('H*').unpack('n*').pack('U*') }
+  # 何故かUTF-8で怒られるのでencode
+  next_html = next_html.force_encoding('utf-8')
+  next_html = next_html.encode("utf-16be", "utf-8", :invalid => :replace, :undef => :replace, :replace => '?').encode("utf-8")
+
   revised_html = ""
   next_html.split('\n').each do |line|
     revised_html << line.gsub(%r{\\"|\\/}, '\"'=>'"', '\/'=>'/') << "\n"
@@ -33,10 +37,6 @@ end
 
 # htmlからtweet情報を取得
 def pull_out_tweet_data(html)
-  # 何故かUTF-8で怒られるのでencode
-  html = html.force_encoding('utf-8')
-  html = html.encode("utf-16be", "utf-8", :invalid => :replace, :undef => :replace, :replace => '?').encode("utf-8")
-
   # tweetのデータが入っているlistを正規表現で切り取り
   tweet_data = html.scan(%r{<li class="js-stream-item stream-item stream-item.+?\n\n</li>\n\n}m)
   tweet_data.each do |data|
