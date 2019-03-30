@@ -1,16 +1,11 @@
 require 'open-uri'
 
-def main
-  top_html = get_top_html
-  min_position = get_min_position(top_html)
-  get_next_json(min_position)
-end
-
 # 仮置き，htmlをファイルから読み込む
 def get_top_html
   f = File.open("./#{$account_name}.html")
-  f.read
+  top_html = f.read
   f.close
+  return top_html
 end
 
 # htmlを与えるとmin-positionを返す
@@ -21,20 +16,29 @@ end
 # min_positionからjsonを取得，次のmin_positionとhtmlに分割
 def get_next_json(min_position)
   url = "https://twitter.com/i/profiles/show/#{$account_name}/timeline/tweets?include_available_features=1&include_entities=1&max_position=#{min_position}&reset_error_state=false"
-  json_data = open(url).read
+  json_data = open(url)
+  p json_data.charset
 
   # 正規表現によりそれぞれを抜き出す
   next_min = $1 if json_data =~ /"min_position":"(.+?)"/
-  page_html = $1 if json_data =~ /"items_html":"(.+?)","new_latent_count"/
+  next_html = $1 if json_data =~ /"items_html":"(.+?)","new_latent_count"/
 
-  # 仮でputsしている
-  page_html.split('\n').each do |line|
-    puts line.gsub(/\\u([\da-fA-F]{4})/) { [$1].pack('H*').unpack('n*').pack('U*') }
-  end
-  puts next_min
+  {"min_position" => next_min, "html" => next_html}
 end
 
+# htmlからtweet情報を取得
+def pull_out_tweet_data(html)
+  html = html.gsub(/\\u([\da-fA-F]{4})/) { [$1].pack('H*').unpack('n*').pack('U*') }
+  tweet_data = html.scan(%r{<li class=\"js-stream-item stream-item stream-item\n\".+?\n\n<\/li>\n\n})
+  # p tweet_data
+end
 
+def main
+  top_html = get_top_html
+  min_position = get_min_position(top_html)
+  next_data = get_next_json(min_position)
+  pull_out_tweet_data(next_data["html"])
+end
 
 # 初期設定やらmainの呼び出し
 if __FILE__ == $0
@@ -49,3 +53,4 @@ if __FILE__ == $0
 
   main
 end
+
