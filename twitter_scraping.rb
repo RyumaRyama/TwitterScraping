@@ -2,10 +2,8 @@ require 'open-uri'
 
 # 仮置き，htmlをファイルから読み込む
 def get_top_html
-  f = File.open("./#{$account_name}.html")
-  top_html = f.read
-  f.close
-  return top_html
+  url = "https://twitter.com/#{$account_name}"
+  open(url).read
 end
 
 # htmlを与えるとmin-positionを返す
