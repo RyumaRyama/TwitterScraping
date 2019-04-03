@@ -1,6 +1,6 @@
 require 'open-uri'
 
-# 仮置き，htmlをファイルから読み込む
+# アカウント名からトップページのhtmlを取得
 def get_top_html
   url = "https://twitter.com/#{$account_name}"
   open(url).read
@@ -15,7 +15,7 @@ end
 def get_next_json(min_position)
   url = "https://twitter.com/i/profiles/show/#{$account_name}/timeline/tweets?include_available_features=1&include_entities=1&max_position=#{min_position}&reset_error_state=false"
   json_data = open(url).read
-
+  
   # 正規表現によりそれぞれを抜き出す
   next_min = json_data[/"min_position":"(.+?)"/, 1]
   next_html = json_data[/"items_html":"(.+?)","new_latent_count"/, 1]
@@ -42,9 +42,16 @@ def pull_out_tweet_data(html)
   tweet_data.each do |data|
     # 仮実装，tweet本文と画像があればURLを取得して表示
     puts "-"*100
+    puts data[%r{@<b>(.+?)</b>}m, 1] + "さんのTweet"
+    get_tweet_time_and_day(data)
     puts data[%r{<div class="js-tweet-text-container">(.+?)</div>}m][%r{<p.+?>(.+?)</p>}m, 1]
     puts
   end
+end
+
+# tweetの日時を取得
+def get_tweet_time_and_day(tweet_data)
+  puts tweet_data[%r{<small class="time">(.+?)</small>}m][/title="(.+?)"/, 1]
 end
 
 def main
