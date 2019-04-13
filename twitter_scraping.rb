@@ -1,3 +1,4 @@
+require './tweet_data.rb'
 require 'open-uri'
 
 # アカウント名からトップページのhtmlを取得
@@ -40,12 +41,7 @@ def pull_out_tweet_data(html)
   # tweetのデータが入っているlistを正規表現で切り取り
   tweet_data = html.scan(%r{<li class="js-stream-item stream-item stream-item.+?\n\n</li>\n\n}m)
   tweet_data.each do |data|
-    # 仮実装，tweet本文と画像があればURLを取得して表示
-    puts "-"*100
-    puts data[%r{@<b>(.+?)</b>}m, 1] + "さんのTweet"
-    get_tweet_time_and_day(data)
-    puts data[%r{<div class="js-tweet-text-container">(.+?)</div>}m][%r{<p.+?>(.+?)</p>}m, 1]
-    puts
+    $tweet_data_list << TweetData.new(data)
   end
 end
 
@@ -60,6 +56,14 @@ def main
   next_data = get_next_json(min_position)
   pull_out_tweet_data(top_html)
   pull_out_tweet_data(next_data["html"])
+
+  $tweet_data_list.each do |tweet_data|
+    puts "-"*50
+    puts tweet_data.time_and_day
+    puts "@" + tweet_data.account + "さんのTweet"
+    puts tweet_data.tweet
+    puts "-"*50
+  end
 end
 
 # 初期設定やらmainの呼び出し
@@ -72,6 +76,7 @@ if __FILE__ == $0
 
   # @を切り離したものをアカウント名として格納
   $account_name = ARGV[0].delete("@")
+  $tweet_data_list = []
 
   main
 end
