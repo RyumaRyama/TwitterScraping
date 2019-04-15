@@ -12,9 +12,9 @@ class TweetData
     # 画像があればリンクを削除
     @tweet = $1 if @tweet =~ %r{(.*?)<a.+</a>}
     # 絵文字なども削除
-    if @tweet =~ /<img .+? title="(.+?)" .+?>/
+    while @tweet =~ /<img .+? title="(.+?)" .+?>/
       img = "[" + $1 + "]"
-      @tweet = @tweet.gsub(/<img.+?>/, img)
+      @tweet = @tweet.sub(/<img.+?>/, img)
     end
   end
 
