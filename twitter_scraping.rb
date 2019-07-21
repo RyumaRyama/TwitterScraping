@@ -45,18 +45,8 @@ def pull_out_tweet_data(html)
   end
 end
 
-# tweetの日時を取得
-def get_tweet_time_and_day(tweet_data)
-  puts tweet_data[%r{<small class="time">(.+?)</small>}m][/title="(.+?)"/, 1]
-end
-
-def main
-  top_html = get_top_html
-  min_position = get_min_position(top_html)
-  next_data = get_next_json(min_position)
-  pull_out_tweet_data(top_html)
-  pull_out_tweet_data(next_data["html"])
-
+# 取得したtweetデータを表示する
+def print_tweets
   $tweet_data_list.each do |tweet_data|
     puts "-"*50
     puts tweet_data.time_and_day
@@ -64,6 +54,54 @@ def main
     puts tweet_data.tweet
     puts "-"*50
   end
+end
+
+# 第一引数が第二引数より新しい日付or同じ日ならtreu
+def is_new_date(date1, date2)
+  date1 = "%04d"%date1[0] + "%02d"%date1[1] + "%02d"%date1[2]
+  date2 = "%04d"%date2[0] + "%02d"%date2[1] + "%02d"%date2[2]
+  date1 >= date2
+end
+
+# 日付をしていし，そこまでのtweetをtextで保存
+def get_tweets_up_to_specified_date(specify_date)
+  tweets_file = File.open("./Tweets/#{$account_name}", "w")
+  top_html = get_top_html
+  pull_out_tweet_data(top_html)
+  min_position = get_min_position(top_html)
+
+  get_flag = true
+  while(get_flag) do
+    $tweet_data_list.each do |tweet|
+      # 自分のtweetだけ抜き取る
+      if tweet.account == $account_name
+        if is_new_date(tweet.time_and_day, specify_date)
+          tweets_file.puts(tweet.tweet)
+        else
+          get_flag = false
+          break
+        end
+        p tweet.time_and_day
+      end
+    end
+
+    # 使用済みtweet_dataの初期化
+    $tweet_data_list = []
+
+    if get_flag
+      next_data = get_next_json(min_position)
+      pull_out_tweet_data(next_data["html"])
+      min_position = next_data["min_position"]
+      p min_position
+    end
+  end
+
+  tweets_file.close
+end
+
+def main
+  get_tweets_up_to_specified_date([2016, 4, 1])
+  # print_tweets
 end
 
 # 初期設定やらmainの呼び出し
@@ -76,6 +114,8 @@ if __FILE__ == $0
 
   # @を切り離したものをアカウント名として格納
   $account_name = ARGV[0].delete("@")
+
+  # tweetのdataは1tweetごとにインスタンス化されて格納
   $tweet_data_list = []
 
   main
